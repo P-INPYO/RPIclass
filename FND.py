@@ -23,12 +23,11 @@ def PORT(pin):
         
 
 while 1:
+    x = int(input())
 
-    for x in range(10):            
+    pin = DISPLAY[x]       
 
-        pin = DISPLAY[x]       
+    PORT(pin);              
 
-        PORT(pin);              
-
-        time.sleep(1)
+    time.sleep(1)
 
