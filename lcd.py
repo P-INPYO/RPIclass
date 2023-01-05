@@ -1,3 +1,6 @@
+import I2C_driver
+import smbus
+from time import *
 import RPi.GPIO as GPIO 
 import time
 
@@ -6,6 +9,7 @@ PIN = [13,6,16,20,21,19,26]
 NUM = [0x01,0x02,0x04,0x08,0x10,0x20,0x40,0x80]
 
 GPIO.setwarnings(False)            
+mylcd = I2C_driver.lcd()
 
 
 def PORT(pin):
@@ -25,7 +29,13 @@ def main(a):
     GPIO.setmode (GPIO.BCM)           
     GPIO.setup(12, GPIO.OUT) 
     Servo=GPIO.PWM(12, 40)
-    duty_ratio = a
+    
+    if a <= 18:
+        duty_ratio = 1
+    elif a == 180:
+        duty_ratio = 9
+    else:
+        duty_ratio = int(a/18)
     
     Servo.start(0)
     print('Wating for 1 sec') 
@@ -38,12 +48,27 @@ def main(a):
     Servo.stop()
     GPIO.cleanup()
     print('Everythings cleanup')
+    
 
 while 1:
-    print('enter 1~9')
-    x = int(input())
-    pin = DISPLAY[x]       
-    PORT(pin)
-    a = int(x)
-    main(a)
+    print('1 : FND \n2 : servo')
+    sel = int(input())
+    
+    if sel == 1:
+        mylcd.lcd_clear()
+        mylcd.lcd_display_string(f"{sel}:FND", 1)
+        print('enter 1~9')
+        f = int(input())
+        mylcd.lcd_display_string(f"{f}", 2)
+        pin = DISPLAY[f]       
+        PORT(pin)
+        
+    elif sel == 2:
+        mylcd.lcd_clear()
+        mylcd.lcd_display_string(f"{sel}:servo", 1)
+        print('enter 0~180')
+        s = int(input())
+        mylcd.lcd_display_string(f"{s}", 2)
+        a = int(s)
+        main(a)
 
