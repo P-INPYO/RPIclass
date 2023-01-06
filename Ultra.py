@@ -3,6 +3,14 @@ import smbus
 from time import *
 import RPi.GPIO as GPIO 
 import time
+from Adafruit_BME280 import *
+
+sensor = BME280(t_mode=BME280_OSAMPLE_8, p_mode=BME280_OSAMPLE_8, h_mode=BME280_OSAMPLE_8)
+
+degrees = sensor.read_temperature()
+pascals = sensor.read_pressure()
+hectopascals = pascals / 100
+humidity = sensor.read_humidity()
 PinTrig=14
 PinEcho=15
 DISPLAY = [0x3F,0x06,0x5B,0x4F,0x66,0x6D,0x7D,0x07,0x7F,0x67]          
@@ -12,6 +20,34 @@ NUM = [0x01,0x02,0x04,0x08,0x10,0x20,0x40,0x80]
 GPIO.setwarnings(False)            
 mylcd = I2C_driver.lcd()
 
+def Temp():
+    while 1:
+        degrees = sensor.read_temperature()
+        pascals = sensor.read_pressure()
+        hectopascals = pascals / 100
+        humidity = sensor.read_humidity()
+        print ('Temp      = {0:0.3f} C'.format(degrees))
+        print ('Pressure  = {0:0.2f} hPa'.format(hectopascals))
+        print ('Humidity  = {0:0.2f} %'.format(humidity))
+        mylcd.lcd_display_string(f"TEMP : {degrees}", 1)
+        mylcd.lcd_display_string(f"Pressure : {hectopascals}", 2)
+        if degrees >= 24:
+            while 1:
+                pin = DISPLAY[8]       
+                FND(pin)
+                motor(1)
+                time.sleep(2)
+                motor(180)
+                GPIO.cleanup()
+                time.sleep(2)
+                degrees = sensor.read_temperature()
+                print ('Temp      = {0:0.3f} C'.format(degrees))
+                mylcd.lcd_display_string(f"TEMP : {degrees}", 1)
+                if degrees < 24:
+                    break
+        if input() == '1':
+            break
+            
 def FND(pin):
     GPIO.setmode(GPIO.BCM)
     GPIO.setup(PIN,GPIO.OUT)
@@ -28,7 +64,8 @@ def FND(pin):
 def ultra():
     motor(1)
     mylcd.lcd_clear()
-    mylcd.lcd_display_string(f"DOOR close", 2)
+    mylcd.lcd_display_string("DOOR close", 2)
+    mylcd.lcd_clear()
     mylcd.lcd_display_string(f"{sel}:ultra", 1)
     while 1:
         GPIO.setmode(GPIO.BCM)  
@@ -89,7 +126,7 @@ def motor(a):
     
 
 while 1:
-    print('1 : FND \n2 : servo \n3 : Ultra')
+    print('1 : FND \n2 : servo \n3 : Ultra\n4 : TEMP')
     sel = int(input())
     
     if sel == 1:
@@ -109,5 +146,7 @@ while 1:
         motor(a)
     elif sel == 3:
         ultra()
+    elif sel == 4:
+        Temp()
 
         
